@@ -47,13 +47,10 @@ impl M2mSettings {
     /// # Errors
     /// [`String`] when no transport is installed (the workload
     /// certificate was never ensured — a provisioning state).
-    pub fn client(
-        &self,
-    ) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
-        self.inner
-            .as_ref()
-            .map(|c| (**c).clone())
-            .ok_or_else(|| "no proxy-back transport configured (workload certificate missing)".into())
+    pub fn client(&self) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
+        self.inner.as_ref().map(|c| (**c).clone()).ok_or_else(|| {
+            "no proxy-back transport configured (workload certificate missing)".into()
+        })
     }
 }
 

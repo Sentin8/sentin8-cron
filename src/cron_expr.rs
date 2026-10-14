@@ -335,7 +335,6 @@ fn first_of_next_month(t: DateTime<Utc>, month: u32) -> Option<DateTime<Utc>> {
     Utc.with_ymd_and_hms(year, month, 1, 0, 0, 0).single()
 }
 
-
 /// Validate an expression for the create handler — returns the normalized
 /// parse error message on failure.
 /// Validate it.

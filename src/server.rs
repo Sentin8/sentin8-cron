@@ -48,7 +48,10 @@ pub async fn build_state(
             );
             match sentin8::middleware::mtls::build_mtls_client(&mtls) {
                 Ok(client) => {
-                    tracing::info!(workload = "sentin8:cron", "cron: cert-presenting proxy-back transport installed");
+                    tracing::info!(
+                        workload = "sentin8:cron",
+                        "cron: cert-presenting proxy-back transport installed"
+                    );
                     config.m2m.set_inner(
                         sentin8::middleware::http_client::Sentin8HttpClient::from_client(client),
                     );

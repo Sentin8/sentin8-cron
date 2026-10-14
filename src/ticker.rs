@@ -568,7 +568,9 @@ pub async fn execute_proxy_back(
     }
     // the cert-presenting transport (the `sentin8:cron`
     // workload identity rides the TLS handshake — no bearer).
-    let client = m2m.client().map_err(|e| format!("proxy-back transport: {e}"))?;
+    let client = m2m
+        .client()
+        .map_err(|e| format!("proxy-back transport: {e}"))?;
     let url = format!("{base_url}{internal_path}/schedules/run");
     // Bound the callback (cron DESIGN §7): a hung
     // callback must not hold its claimed job indefinitely; on timeout the

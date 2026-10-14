@@ -69,22 +69,40 @@ mod config {
         }
     }
 
-    /// Mirrors `crate::config::M2mSettings` — token() resolves from the
-    /// static dev fallback.
+    /// Mirrors `crate::config::M2mSettings` — the cert-presenting
+    /// transport stand-in. The real one resolves from the ensured
+    /// workload certificate; the mock returns a PLAIN-HTTP client
+    /// (the proxy-back tests hit local `127.0.0.1` mock servers).
     #[derive(Clone)]
     pub struct M2mSettings {
-        fallback: String,
+        installed: bool,
     }
 
     impl M2mSettings {
         pub fn disabled() -> Self {
-            Self {
-                fallback: String::new(),
-            }
+            Self { installed: false }
         }
 
-        pub async fn token(&self) -> Result<String, String> {
-            Ok(self.fallback.clone())
+        /// Transport installed — the proxy-back tests' stand-in for a
+        /// boot-built cert-presenting client.
+        pub fn installed() -> Self {
+            Self { installed: true }
+        }
+
+        /// The transport for proxy-back calls (mirror of the real
+        /// contract — absent = provisioning state).
+        pub fn client(
+            &self,
+        ) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
+            if !self.installed {
+                return Err(
+                    "no proxy-back transport configured (workload certificate missing)"
+                        .into(),
+                );
+            }
+            // The tests hit plain-HTTP 127.0.0.1 mock servers — a plain
+            // client mirrors the transport contract without TLS material.
+            Ok(sentin8::middleware::http_client::Sentin8HttpClient::new())
         }
     }
 }
@@ -151,7 +169,7 @@ fn install_provider() {
 
 fn m2m_settings() -> config::M2mSettings {
     install_provider();
-    config::M2mSettings::disabled()
+    config::M2mSettings::installed()
 }
 
 #[tokio::test]
@@ -460,9 +478,8 @@ fn cron_rejects_bad_expressions() {
 /// `sentin8` superuser bypasses RLS entirely, which would silently void
 /// every RLS assertion here (architecture-principles §4.3e).
 async fn db_pool() -> Option<sqlx::PgPool> {
-    let url = std::env::var("SENTIN8_CRON_DATABASE_URL").unwrap_or_else(|_| {
-        "postgres://sentin8_cron_service@localhost:5432/sentin8".to_string()
-    });
+    let url = std::env::var("SENTIN8_CRON_DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://sentin8_cron_service@localhost:5432/sentin8".to_string());
     match sqlx::postgres::PgPool::connect(&url).await {
         Ok(p) => Some(p),
         Err(e) => {

@@ -137,9 +137,7 @@ fn default_max_retries() -> i32 {
 /// RFW admin form sends TEXT, and without this unwrap the empty-string
 /// case persisted a bare string that only surfaced as a per-tick ticker
 /// failure. Any other non-object shape is a 400.
-fn normalize_target_config(
-    v: serde_json::Value,
-) -> Result<serde_json::Value, String> {
+fn normalize_target_config(v: serde_json::Value) -> Result<serde_json::Value, String> {
     match v {
         serde_json::Value::Null => Ok(serde_json::json!({})),
         serde_json::Value::String(s) if s.trim().is_empty() => Ok(serde_json::json!({})),
