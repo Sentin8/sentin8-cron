@@ -1,0 +1,10 @@
+{
+  "vertical": "sentin8",
+  "services": [
+    {
+      "service_type": "sentin8:cron",
+      "subdomain": "cron",
+      "binary": "sentin8-cron"
+    }
+  ]
+}
