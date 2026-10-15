@@ -96,8 +96,7 @@ mod config {
         ) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
             if !self.installed {
                 return Err(
-                    "no proxy-back transport configured (workload certificate missing)"
-                        .into(),
+                    "no proxy-back transport configured (workload certificate missing)".into(),
                 );
             }
             // The tests hit plain-HTTP 127.0.0.1 mock servers — a plain
