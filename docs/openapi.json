@@ -1,0 +1,696 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "sentin8-cron",
+    "description": "Sentin8 Sentin8:Cron — standalone distributed scheduler.",
+    "license": {
+      "name": "MIT OR Apache-2.0",
+      "identifier": "MIT OR Apache-2.0"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/dlq": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/dlq`\nList dlq.",
+        "operationId": "dlq.list",
+        "responses": {
+          "200": {
+            "description": "List of DLQ items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DlqResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:read scope"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      }
+    },
+    "/v1/dlq/{id}": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/dlq/{id}` — DLQ item detail.\nFetch dlq.",
+        "operationId": "dlq.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "DLQ item ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DLQ item detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DlqResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DLQ item not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      }
+    },
+    "/v1/dlq/{id}/republish": {
+      "post": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`POST /v1/dlq/{id}/republish` — republish a DLQ item as a new pending\njob and delete the DLQ row.\nHandle republish dlq.",
+        "operationId": "dlq.republish",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "DLQ item ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "DLQ item republished"
+          },
+          "404": {
+            "description": "DLQ item not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    },
+    "/v1/jobs": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/jobs`\nList jobs.",
+        "operationId": "job.list",
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "query",
+            "description": "Filter by schedule ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:read scope"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      }
+    },
+    "/v1/jobs/{id}": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/jobs/{id}` — job detail.\nFetch job.",
+        "operationId": "job.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Job ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:read scope"
+          },
+          "404": {
+            "description": "Job not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      }
+    },
+    "/v1/jobs/{id}/retry": {
+      "post": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`POST /v1/jobs/{id}/retry` — reset a failed job to `pending` with\n`next_attempt_at = now`; the ticker drains it on the next tick\n.\nRetry job.",
+        "operationId": "job.retry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Job ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Job queued for retry"
+          },
+          "404": {
+            "description": "Failed job not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    },
+    "/v1/schedules": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/schedules`\nList schedules.",
+        "operationId": "schedule.list",
+        "responses": {
+          "200": {
+            "description": "List of schedules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:read scope"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`POST /v1/schedules`\nCreate schedule.",
+        "operationId": "schedule.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:write scope"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    },
+    "/v1/schedules/{id}": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`GET /v1/schedules/{id}` — schedule detail.\nFetch schedule.",
+        "operationId": "schedule.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Schedule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedule detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing cron:read scope"
+          },
+          "404": {
+            "description": "Schedule not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:read": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`DELETE /v1/schedules/{id}`\nDelete schedule.",
+        "operationId": "schedule.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Schedule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Schedule deleted"
+          },
+          "403": {
+            "description": "Missing cron:write scope"
+          },
+          "404": {
+            "description": "Schedule not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    },
+    "/v1/schedules/{id}/pause": {
+      "post": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`POST /v1/schedules/{id}/pause`\nPause schedule.",
+        "operationId": "schedule.pause",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Schedule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Schedule paused"
+          },
+          "404": {
+            "description": "Schedule not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    },
+    "/v1/schedules/{id}/resume": {
+      "post": {
+        "tags": [
+          "cron"
+        ],
+        "summary": "`POST /v1/schedules/{id}/resume`\nResume schedule.",
+        "operationId": "schedule.resume",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Schedule ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Schedule resumed"
+          },
+          "404": {
+            "description": "Schedule not found"
+          }
+        },
+        "security": [
+          {
+            "sentin8:cron:write": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateScheduleRequest": {
+        "type": "object",
+        "description": "Request body for createschedule.",
+        "required": [
+          "domain",
+          "schedule_type",
+          "cron_expression"
+        ],
+        "properties": {
+          "cron_expression": {
+            "type": "string",
+            "description": "The cron expression."
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain."
+          },
+          "fire_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Single fire time for `kind: \"once\"` schedules (RFC 3339)."
+          },
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`once` = single fire at `fire_at` (then `completed`); default\nrecurring = the cron expression drives every fire."
+          },
+          "max_retries": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum retries."
+          },
+          "schedule_type": {
+            "type": "string",
+            "description": "The schedule type."
+          },
+          "target_config": {
+            "description": "The target config."
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA zone the cron_expression's wall-clock fields match against\n(CRON-6, cron README §7). Default 'UTC'. Rejected at create time\nwhen unparseable."
+          }
+        }
+      },
+      "DlqQuery": {
+        "type": "object",
+        "description": "The dlqquery type.",
+        "properties": {
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The domain."
+          }
+        }
+      },
+      "DlqResponse": {
+        "type": "object",
+        "description": "Response payload for dlq.",
+        "required": [
+          "id",
+          "schedule_id",
+          "domain",
+          "schedule_type",
+          "error_message",
+          "retry_count"
+        ],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "The domain."
+          },
+          "error_message": {
+            "type": "string",
+            "description": "The error message."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier."
+          },
+          "retry_count": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The retry count."
+          },
+          "schedule_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "schedule identifier."
+          },
+          "schedule_type": {
+            "type": "string",
+            "description": "The schedule type."
+          }
+        }
+      },
+      "JobQuery": {
+        "type": "object",
+        "description": "The jobquery type.",
+        "properties": {
+          "schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "schedule identifier."
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The status."
+          }
+        }
+      },
+      "JobResponse": {
+        "type": "object",
+        "description": "Response payload for job.",
+        "required": [
+          "id",
+          "schedule_id",
+          "status"
+        ],
+        "properties": {
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "completed time."
+          },
+          "error_message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The error message."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier."
+          },
+          "schedule_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "schedule identifier."
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "started time."
+          },
+          "status": {
+            "type": "string",
+            "description": "The status."
+          }
+        }
+      },
+      "ScheduleResponse": {
+        "type": "object",
+        "description": "Response payload for schedule.",
+        "required": [
+          "id",
+          "domain",
+          "schedule_type",
+          "cron_expression",
+          "target_config",
+          "status",
+          "next_run_at",
+          "max_retries"
+        ],
+        "properties": {
+          "cron_expression": {
+            "type": "string",
+            "description": "The cron expression."
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier."
+          },
+          "max_retries": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum retries."
+          },
+          "next_run_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The next run at."
+          },
+          "schedule_type": {
+            "type": "string",
+            "description": "The schedule type."
+          },
+          "status": {
+            "type": "string",
+            "description": "The status."
+          },
+          "target_config": {
+            "description": "The target config."
+          }
+        }
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "cron",
+      "description": "Sentin8:Cron admin API — schedules, jobs, DLQ"
+    }
+  ]
+}
