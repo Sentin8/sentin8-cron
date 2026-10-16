@@ -4,7 +4,11 @@
     {
       "service_type": "sentin8:cron",
       "subdomain": "cron",
-      "binary": "sentin8-cron"
+      "binary": "sentin8-cron",
+      "telemetry_property": {
+        "slug": "cron",
+        "name": "Sentin8:Cron Platform Telemetry"
+      }
     }
   ]
 }
