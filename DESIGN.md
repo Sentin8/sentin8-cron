@@ -1,4 +1,4 @@
-# DESIGN.md: Sentin8:Cron — Detailed Design Document
+# Sentin8:Cron — Detailed Design Document
 
 ## 1. Scope & Context
 
