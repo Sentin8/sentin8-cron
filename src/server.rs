@@ -111,7 +111,7 @@ pub fn routes(
         .route("/v1/schedules/{id}/pause", post(handlers::pause_schedule))
         .route("/v1/schedules/{id}/resume", post(handlers::resume_schedule))
         // POST alias for RFW row_action_post (renderer only supports POST)
-        .route("/v1/schedules/{id}/delete", post(handlers::delete_schedule))
+        .route("/v1/schedules/{id}/delete", post(crate::openapi::rfw_aliases::delete_schedule_alias))
         // Jobs
         .route("/v1/jobs", get(handlers::list_jobs))
         .route("/v1/jobs/{id}", get(handlers::get_job))

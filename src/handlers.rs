@@ -1098,9 +1098,16 @@ pub async fn republish_dlq(
 
 // ── Health ──────────────────────────────────────────────────────────────
 
-/// `GET /v1/health` — status, ticker heartbeat, active schedule count
-/// .
-/// Handle health.
+/// `GET /v1/health` — status, ticker heartbeat, active schedule count.
+#[utoipa::path(
+    get,
+    path = "/v1/health",
+    responses(
+        (status = 200, description = "Liveness + ticker heartbeat + schedule count", body = serde_json::Value),
+    ),
+    security(),
+    tag = "meta",
+)]
 pub async fn health(State(state): State<AppState>) -> Json<serde_json::Value> {
     let ticker_running = crate::ticker::LAST_TICK
         .lock()
