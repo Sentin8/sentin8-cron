@@ -34,7 +34,7 @@ pub struct TargetEnvQuery {
         ("target_env_id" = String, Query, description = "Target env (RLS context)")
     ),
     responses(
-        (status = 200, description = "RFW page definition (rendered by Sentin8:Dash)", body = serde_json::Value),
+        (status = 200, description = "RFW page definition (rendered by Sentin8:Dash)", body = sentin8::rfw::AdminUiResponse),
         (status = 403, description = "Caller lacks a cron read/admin scope"),
         (status = 404, description = "Unknown page"),
     ),
@@ -46,7 +46,7 @@ pub async fn get_admin_ui(
     headers: HeaderMap,
     Query(_q): Query<TargetEnvQuery>,
     Path(page): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<AdminUiResponse>, (axum::http::StatusCode, String)> {
     let a = crate::auth::verify_token(&state.config, &headers).await?;
     a.require_any_scope(&[
         "sentin8:cron:write",
@@ -185,9 +185,7 @@ pub async fn get_admin_ui(
             ))
         }
     };
-    Ok(Json(
-        serde_json::to_value(AdminUiResponse::page(def)).unwrap(),
-    ))
+    Ok(Json(AdminUiResponse::page(def)))
 }
 
 /// `GET /v1/admin/{resource}` - returns a JSON array of admin data rows.
@@ -203,7 +201,7 @@ pub async fn get_admin_ui(
         ("target_env_id" = String, Query, description = "Target env (RLS context)")
     ),
     responses(
-        (status = 200, description = "The resource's rows for the RFW table", body = serde_json::Value),
+        (status = 200, description = "The resource's rows for the RFW table", body = sentin8::rfw::policy_pages::AdminDataRows),
         (status = 403, description = "Caller lacks a cron read/admin scope"),
         (status = 404, description = "Unknown resource"),
     ),

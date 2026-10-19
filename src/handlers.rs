@@ -1099,16 +1099,39 @@ pub async fn republish_dlq(
 // ── Health ──────────────────────────────────────────────────────────────
 
 /// `GET /v1/health` - status, ticker heartbeat, active schedule count.
+
+/// The rich liveness payload (ticker heartbeat + schedule count).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CronHealth {
+    /// Always `ok` on a live instance.
+    pub status: String,
+    /// Always `cron`.
+    pub service: String,
+    /// Build identity id.
+    pub version: String,
+    /// Build hash.
+    pub build: String,
+    /// Whether the scheduler ticker ticked within 3 intervals.
+    pub ticker_running: bool,
+    /// Active schedule rows.
+    pub active_schedules: i64,
+    /// Live socket count (when the traffic counter is mounted).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_connections: Option<i64>,
+}
+
 #[utoipa::path(
     get,
     path = "/v1/health",
     responses(
-        (status = 200, description = "Liveness + ticker heartbeat + schedule count", body = serde_json::Value),
+        (status = 200, description = "Liveness + ticker heartbeat + schedule count", body = CronHealth),
     ),
     security(),
     tag = "meta",
 )]
-pub async fn health(State(state): State<AppState>) -> Json<serde_json::Value> {
+/// Handle health.
+pub async fn health(State(state): State<AppState>) -> Json<CronHealth> {
     let ticker_running = crate::ticker::LAST_TICK
         .lock()
         .ok()
@@ -1127,18 +1150,16 @@ pub async fn health(State(state): State<AppState>) -> Json<serde_json::Value> {
     .ok()
     .and_then(|r| r.try_get::<i64, _>("n").ok())
     .unwrap_or(0);
-    let mut payload = serde_json::json!({
-        "status": "ok",
-        "service": "cron",
-        "version": sentin8::build_info::id(),
-        "build": sentin8::build_info::build_hash(),
-        "tickerRunning": ticker_running,
-        "activeSchedules": active_schedules,
-    });
-    if let Some(n) = sentin8::middleware::traffic_counter::process_active_connections() {
-        payload["active_connections"] = serde_json::json!(n);
-    }
-    Json(payload)
+    Json(CronHealth {
+        status: "ok".to_string(),
+        service: "cron".to_string(),
+        version: sentin8::build_info::id(),
+        build: sentin8::build_info::build_hash().to_string(),
+        ticker_running,
+        active_schedules,
+        active_connections: sentin8::middleware::traffic_counter::process_active_connections()
+            .map(|n| n as i64),
+    })
 }
 
 /// Append an event to the shared `inbox` table **inside the domain
