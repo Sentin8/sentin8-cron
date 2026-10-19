@@ -19,12 +19,12 @@ use utoipa::OpenApi;
 
 use crate::handlers;
 
-/// Thin annotated POST-alias wrappers (Dash 28.14 — the RFW renderer is
+/// Thin annotated POST-alias wrappers (Dash 28.14 - the RFW renderer is
 /// POST-only): same handler body, alias path.
 pub mod rfw_aliases {
     use crate::handlers;
 
-    /// `POST /v1/schedules/{id}/delete` — RFW renderer alias of
+    /// `POST /v1/schedules/{id}/delete` - RFW renderer alias of
     /// `DELETE /v1/schedules/{id}` (same operation, same gates).
     #[utoipa::path(
         post,
@@ -99,6 +99,6 @@ pub mod rfw_aliases {
     security(),
     tags(
         (name = "policy", description = "Shield policy administration (shared surface)"),
-        (name = "cron", description = "Sentin8:Cron admin API — schedules, jobs, DLQ"),
+        (name = "cron", description = "Sentin8:Cron admin API - schedules, jobs, DLQ"),
     ),
 )]pub struct CronOpenApi;

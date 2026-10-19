@@ -3,13 +3,13 @@
 -- SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:Cron
 -- SPDX-License-Identifier: Apache-2.0
 
--- Sentin8:Cron — standalone scheduling service tables.
+-- Sentin8:Cron - standalone scheduling service tables.
 -- Stores schedules, job execution records, and dead-letter queue items.
 -- Uses PostgreSQL advisory locks for distributed execution safety.
 
 CREATE SCHEMA IF NOT EXISTS cron;
 -- Natural key (env_id, domain, schedule_type): one declared schedule per
--- (env, owning service, schedule name) — `vertical enroll` upserts platform
+-- (env, owning service, schedule name) - `vertical enroll` upserts platform
 -- schedules ON CONFLICT (env_id, domain, schedule_type), and the uniqueness
 -- is the schema-level guarantee a re-enroll converges instead of duplicating
 -- rows (cron DESIGN §3 SCHEDULES).
@@ -57,7 +57,7 @@ CREATE INDEX IF NOT EXISTS idx_cron_jobs_status ON cron.jobs (status);
 CREATE INDEX IF NOT EXISTS idx_cron_jobs_retryable ON cron.jobs (next_attempt_at)
     WHERE status = 'pending' AND next_attempt_at IS NOT NULL;
 
--- One open (pending/running) job per schedule at a time — advisory-lock
+-- One open (pending/running) job per schedule at a time - advisory-lock
 -- backstop (design §4.5).
 CREATE UNIQUE INDEX IF NOT EXISTS sentin8_cron_jobs_open_per_schedule
     ON cron.jobs (schedule_id)
@@ -226,7 +226,7 @@ CREATE POLICY audit_journal_dml ON cron.audit_journal
     WITH CHECK (sentin8_context_initialized() AND env_id = sentin8_current_env_id());
 
 
--- ── Schema grants (service-owned — the 2026-10-03 ownership pass) ─────
+-- ── Schema grants (service-owned - the 2026-10-03 ownership pass) ─────
 -- This service's own schema: USAGE for its role (platform.sql no longer
 -- seeds per-service USAGE; the service declares it here).
 GRANT USAGE ON SCHEMA cron TO sentin8_cron_service;

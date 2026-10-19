@@ -3,23 +3,23 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:Cron
 // SPDX-License-Identifier: Apache-2.0
 
-// Cron unit/integration tests — testing-strategy §3 (TEST-1..4 in
+// Cron unit/integration tests - testing-strategy §3 (TEST-1..4 in
 // services/cron/BACKLOG.md).
 //
 // The ticker loop (`ticker.rs`) is DB-bound, but its pure seams are
 // testable without a database:
-//   1. `uuid_to_i64` — the advisory-lock key derivation (stability +
+//   1. `uuid_to_i64` - the advisory-lock key derivation (stability +
 //      uniqueness properties).
-//   2. `execute_proxy_back` — the proxy-back contract: missing baseUrl
+//   2. `execute_proxy_back` - the proxy-back contract: missing baseUrl
 //      rejection, URL assembly from target_config, and the self-contained
 //      envelope payload (verifiable against a local listener).
-//   3. `cron_expr` — cron expression parsing + next-fire computation
+//   3. `cron_expr` - cron expression parsing + next-fire computation
 //      (CRON-HARD-1, unblocks TEST-1).
-//   4. Backoff progression — 60s × 2^retry capped at 1h.
+//   4. Backoff progression - 60s × 2^retry capped at 1h.
 //
 // Request/response shapes of the handlers are exercised through serde
 // roundtrips (`CreateScheduleRequest`, `ScheduleResponse`, `JobResponse`,
-// `DlqResponse`) — the wire-format layer of the cron API.
+// `DlqResponse`) - the wire-format layer of the cron API.
 //
 // Pure tests run under `make test-rust`; DB-backed tests (TEST-2/TEST-3)
 // live at the bottom and runtime-skip when PostgreSQL is unreachable.
@@ -31,25 +31,25 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 // ticker.rs is included as a module of THIS test crate, so its
 // `use crate::config::CronConfig` must resolve here. Provide a minimal
-// stand-in with the fields the DB-bound paths read — `spawn`/`tick` are
+// stand-in with the fields the DB-bound paths read - `spawn`/`tick` are
 // not exercised by the pure tests.
 #[path = "../src/ticker.rs"]
 #[allow(dead_code)] // spawn/tick are DB-bound and unused in this test binary
 mod ticker;
 
-// Stand-in for the service's cron_expr module — the ticker's next_fire
+// Stand-in for the service's cron_expr module - the ticker's next_fire
 // path is only reachable DB-bound, but keeping the module tree consistent
 // lets the parser tests below use the same source file.
 #[path = "../src/cron_expr.rs"]
 mod cron_expr;
 
-// Stand-in for the service's config module — keeps ticker.rs compiling
+// Stand-in for the service's config module - keeps ticker.rs compiling
 // in the test crate without dragging the real config (AuthClient init
 // needs env vars) into the test.
 #[allow(dead_code)]
 mod config {
     /// Mirrors the fields of `crate::config::CronConfig` that ticker.rs
-    /// reads. Not a real config — never constructed in these tests.
+    /// reads. Not a real config - never constructed in these tests.
     #[derive(Clone)]
     pub struct CronConfig {
         pub ticker_interval_secs: u64,
@@ -58,7 +58,7 @@ mod config {
     }
 
     impl CronConfig {
-        /// Stand-in for the real from_env — ticker's timeout wrapper reads
+        /// Stand-in for the real from_env - ticker's timeout wrapper reads
         /// the job timeout; tests construct the struct directly.
         pub fn from_env() -> Self {
             Self {
@@ -69,7 +69,7 @@ mod config {
         }
     }
 
-    /// Mirrors `crate::config::M2mSettings` — the cert-presenting
+    /// Mirrors `crate::config::M2mSettings` - the cert-presenting
     /// transport stand-in. The real one resolves from the ensured
     /// workload certificate; the mock returns a PLAIN-HTTP client
     /// (the proxy-back tests hit local `127.0.0.1` mock servers).
@@ -83,14 +83,14 @@ mod config {
             Self { installed: false }
         }
 
-        /// Transport installed — the proxy-back tests' stand-in for a
+        /// Transport installed - the proxy-back tests' stand-in for a
         /// boot-built cert-presenting client.
         pub fn installed() -> Self {
             Self { installed: true }
         }
 
         /// The transport for proxy-back calls (mirror of the real
-        /// contract — absent = provisioning state).
+        /// contract - absent = provisioning state).
         pub fn client(
             &self,
         ) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
@@ -99,7 +99,7 @@ mod config {
                     "no proxy-back transport configured (workload certificate missing)".into(),
                 );
             }
-            // The tests hit plain-HTTP 127.0.0.1 mock servers — a plain
+            // The tests hit plain-HTTP 127.0.0.1 mock servers - a plain
             // client mirrors the transport contract without TLS material.
             Ok(sentin8::middleware::http_client::Sentin8HttpClient::new())
         }
@@ -123,7 +123,7 @@ fn lock_key_differs_for_different_uuids() {
 
 #[test]
 fn lock_key_uses_first_8_bytes() {
-    // The hash only reads the first 8 bytes of the uuid — flipping bits in
+    // The hash only reads the first 8 bytes of the uuid - flipping bits in
     // the last 8 must not change the key.
     let mut bytes = [0u8; 16];
     bytes.copy_from_slice(uuid::Uuid::new_v4().as_bytes());
@@ -155,7 +155,7 @@ fn lock_key_fits_i64() {
 
 // ── Proxy-back contract (ticker.rs) ─────────────────────────────────────
 
-/// Install the Graviola PQ crypto provider once — reqwest panics with
+/// Install the Graviola PQ crypto provider once - reqwest panics with
 /// "No provider set" when a client is built without one (stat-client
 /// test pattern). `execute_proxy_back` builds a Sentin8HttpClient.
 fn install_provider() {
@@ -237,7 +237,7 @@ async fn proxy_back_url_assembly_and_payload() {
     let raw = server.await.unwrap();
     assert!(raw.starts_with("POST /v1/internal/schedules/run HTTP/1.1"));
     assert!(raw.contains("\"schedule_type\":\"statement\""));
-    // Self-contained envelope (design §4.4) — the target cannot derive
+    // Self-contained envelope (design §4.4) - the target cannot derive
     // tenant context from the bearer token.
     assert!(raw.contains(&format!("\"env_id\":\"{env}\"")));
     assert!(raw.contains(&format!("\"schedule_id\":\"{schedule}\"")));
@@ -372,7 +372,7 @@ fn target_env_query_missing_env_rejected() {
     let parsed: Result<std::collections::HashMap<String, String>, _> =
         serde_urlencoded::from_str(q);
     // The value parses as a query string; the uuid rejection happens in
-    // the handler via Uuid::parse_str — simulate that decision here.
+    // the handler via Uuid::parse_str - simulate that decision here.
     let val = parsed.unwrap().get("target_env_id").cloned();
     let resolved = val.and_then(|s| uuid::Uuid::parse_str(&s).ok());
     assert!(resolved.is_none(), "invalid uuid must not resolve");
@@ -473,7 +473,7 @@ fn cron_rejects_bad_expressions() {
 /// Runtime-skip pattern (testing-strategy §3.2): connect attempt; on
 /// failure print one skip line and return None.
 ///
-/// SECURITY: connects as the NOBYPASSRLS `sentin8_cron_service` role — the
+/// SECURITY: connects as the NOBYPASSRLS `sentin8_cron_service` role - the
 /// `sentin8` superuser bypasses RLS entirely, which would silently void
 /// every RLS assertion here (architecture-principles §4.3e).
 async fn db_pool() -> Option<sqlx::PgPool> {
@@ -482,7 +482,7 @@ async fn db_pool() -> Option<sqlx::PgPool> {
     match sqlx::postgres::PgPool::connect(&url).await {
         Ok(p) => Some(p),
         Err(e) => {
-            eprintln!("skipping DB-backed cron tests — PostgreSQL unreachable: {e}");
+            eprintln!("skipping DB-backed cron tests - PostgreSQL unreachable: {e}");
             None
         }
     }
@@ -544,7 +544,7 @@ async fn db_schedules_crud_respects_rls() {
         .get::<i64, _>("n");
     assert_eq!(visible, 1);
 
-    // Clean up (context required — NOBYPASSRLS).
+    // Clean up (context required - NOBYPASSRLS).
     sqlx::query("DELETE FROM cron.schedules WHERE id = $1")
         .bind(schedule_id)
         .execute(&mut *tx)

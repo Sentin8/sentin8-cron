@@ -74,7 +74,7 @@ mod tests {
         let mut s = sample();
         s.last_run_at = None;
         let v = serde_json::to_value(&s).unwrap();
-        // last_run_at is Option without skip_serializing_if — wire keeps null.
+        // last_run_at is Option without skip_serializing_if - wire keeps null.
         assert!(v.get("last_run_at").is_some_and(|x| x.is_null()));
         let back: Schedule = serde_json::from_value(v).unwrap();
         assert!(back.last_run_at.is_none());

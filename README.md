@@ -1,4 +1,4 @@
-# Design Doc: Sentin8:Cron — Distributed Scheduler
+# Design Doc: Sentin8:Cron - Distributed Scheduler
 
 ## 1. Summary
 
@@ -16,7 +16,7 @@ trace archiving) here instead of running embedded schedulers.
   owns all timing, retry policy, and schedule inspection.
 - **Callbacks, not coupling.** Cron never imports domain logic; each
   schedule carries its callback target (`base_url`, `internal_path`,
-  `auth_token`) and calls back the owner — the owner's data access
+  `auth_token`) and calls back the owner - the owner's data access
   stays with the owner.
 - **Idempotent execution.** Missed/duplicate ticks happen (retries,
   leader transitions); schedules carry a retry budget and consumers
@@ -49,30 +49,30 @@ graph TD
     end
 ```
 
-- **Schedule lifecycle** — `active` schedules are picked up by the
+- **Schedule lifecycle** - `active` schedules are picked up by the
   ticker; `paused` schedules are skipped (retained); `deleted`
   schedules are removed.
-- **Ticker** — single-loop, Valkey-lease leader election (only the
+- **Ticker** - single-loop, Valkey-lease leader election (only the
   leader fires), per-schedule retry budgets, and
   `next_run_at` advancement after each attempt.
-- **Cron expressions** — full 5-field support with validation at
+- **Cron expressions** - full 5-field support with validation at
   registration time (malformed expressions rejected at the API, not
   at tick time).
-- **DLQ** — failed deliveries land with their failure reason; replay
+- **DLQ** - failed deliveries land with their failure reason; replay
   re-fires the callback.
 
 ## 4. Key Traits and Data Structures
 
-- **`Schedule`** — the stored record: id, domain, type, cron
+- **`Schedule`** - the stored record: id, domain, type, cron
   expression, IANA `timezone` (default `'UTC'`, validated at create
   time), status, last/next run timestamps, org/env (RLS key).
-- **`CreateScheduleRequest` / `ScheduleResponse`** — the API wire
+- **`CreateScheduleRequest` / `ScheduleResponse`** - the API wire
   types (mirroring the shared cron-contracts crate with the
   `target_config`/`max_retries` extensions).
-- **`target_config`** — the callback envelope:
+- **`target_config`** - the callback envelope:
   `{"base_url", "internal_path", "auth_token"}`; `max_retries` is the
   per-schedule retry budget (default 3).
-- **`cron_expr`** — the 5-field parser/evaluator: minute, hour,
+- **`cron_expr`** - the 5-field parser/evaluator: minute, hour,
   day-of-month, month, day-of-week; supports lists, ranges, steps, and
   the `*` wildcard. With a schedule's IANA `timezone` set, the
   wall-clock fields match local time (`0 9 * * *` = 9am local,
@@ -82,8 +82,8 @@ graph TD
 ## 5. Rationale, Trade-offs, and Alternatives
 
 - **5-field cron over bespoke DSL.** Universally understood, trivially
-  auditable, and directly comparable across verticals. Alternatives —
-  interval seconds or cron-plus-sugar — either lose expressiveness or
+  auditable, and directly comparable across verticals. Alternatives -
+  interval seconds or cron-plus-sugar - either lose expressiveness or
   add parsing surface. Sub-second scheduling is not a platform need.
 - **Leader-elected single ticker.** Valkey-lease leadership means only
   one replica fires per tick; firing from every replica would
@@ -105,7 +105,7 @@ graph TD
   double-fire). A per-schedule budget plus idempotent consumers beats
   a global constant.
 - **Registration-time validation.** Malformed expressions are rejected
-  at create time — a schedule that silently never fires is worse than
+  at create time - a schedule that silently never fires is worse than
   a 400.
 - **DLQ with replay.** Exhausted retries park the tick with its
   failure reason; replay re-fires on demand (the consumer's
@@ -121,7 +121,7 @@ graph TD
 ## 6. Internal Implementation & Invariants (Private Design)
 
 - **Invariants:**
-  - Cron does NOT create its database or tables — the init/seed SQL is
+  - Cron does NOT create its database or tables - the init/seed SQL is
     applied by `vertical init`; the service starts on an existing
     schema.
   - Every schedule write runs with the tenant context set on the same
@@ -147,7 +147,7 @@ graph TD
 ## 7. Unresolved Questions / Future Designs
 
 - Schedule versioning is an update-in-place with an audit event (effective on
-  the next tick) — version tables add bookkeeping without a consumer need; a
+  the next tick) - version tables add bookkeeping without a consumer need; a
   non-goal.
 - Callback result capture retains status + duration per tick (the run row
   carries them) and caps response-body capture to the failure path.

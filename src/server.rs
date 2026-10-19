@@ -18,15 +18,15 @@ pub async fn build_state(
 ) -> anyhow::Result<crate::handlers::AppState> {
     let mut config = crate::config::CronConfig::from_env();
 
-    // ── Sentin8:Policy — boot load refuses to start on invalid
+    // ── Sentin8:Policy - boot load refuses to start on invalid
     // policy text. Hot-reload via the shared consumer.
-    // ── Sentin8:Policy (— shell-owned boot): consume the
-    // engine the shell booted in step 8 — no second engine, consumer, or
+    // ── Sentin8:Policy (- shell-owned boot): consume the
+    // engine the shell booted in step 8 - no second engine, consumer, or
     // DCR registration here.
     let policy_engine = core.admin.policy.clone();
 
     // auth DESIGN §4.3f: ensure the `sentin8:cron` workload
-    // CERTIFICATE (load-or-mint from Acme — the certificate IS the
+    // CERTIFICATE (load-or-mint from Acme - the certificate IS the
     // identity; no DCR, no token) and install the cert-presenting
     // transport for proxy-back calls. The target service's TLS layer
     // authenticates the handshake. The workload grant is declared in
@@ -87,7 +87,7 @@ pub async fn build_state(
 /// Add this service's routes onto the shell-provided router. The shell
 /// owns the boot sequence, state binding, OpenAPI merge and the standard
 /// middleware stack; this adds ONLY routes (including the service's own
-/// `/v1/health` — custom payload).
+/// `/v1/health` - custom payload).
 /// Handle routes.
 pub fn routes(
     router: axum::Router<crate::handlers::AppState>,
@@ -120,8 +120,8 @@ pub fn routes(
         .route("/v1/dlq", get(handlers::list_dlq))
         .route("/v1/dlq/{id}", get(handlers::get_dlq))
         .route("/v1/dlq/{id}/republish", post(handlers::republish_dlq))
-        // Traffic counter — counts every inbound request (excludes health checks).
-        // ── Sentin8:Policy admin API ( — shared implementation,
+        // Traffic counter - counts every inbound request (excludes health checks).
+        // ── Sentin8:Policy admin API ( - shared implementation,
         // one surface per service; handlers are generic over this AppState).
         .route(
             "/v1/admin/policy-sets",
@@ -167,7 +167,7 @@ pub fn routes(
         )
 }
 
-/// Shared policy-admin surface accessor — the shared
+/// Shared policy-admin surface accessor - the shared
 /// handlers extract this service's admin state via [`HasPolicyAdmin`].
 impl sentin8::shield::admin::HasPolicyAdmin for AppState {
     fn policy_admin(&self) -> &sentin8::shield::admin::SharedAdminState {

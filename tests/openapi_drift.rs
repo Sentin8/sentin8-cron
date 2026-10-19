@@ -6,7 +6,7 @@
 //! Router drift guard (OAPEC design §3).
 //!
 //! Introspects the typed-but-unbound router (`Router<AppState>` before
-//! `with_state` — the guard dispatches no request, so no state is needed)
+//! `with_state` - the guard dispatches no request, so no state is needed)
 //! and asserts the compiled spec covers every served route and carries no
 //! stale spec pairs. A route without an annotation fails CI before the site
 //! API pages can trail.

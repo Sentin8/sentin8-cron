@@ -208,7 +208,7 @@ impl CronExpr {
                 continue;
             }
             if !day_matches(self, t) {
-                // Skip to midnight of the next day — keeps the minute
+                // Skip to midnight of the next day - keeps the minute
                 // iteration inside one day only.
                 t = (t + Duration::days(1))
                     .with_hour(0)
@@ -228,13 +228,13 @@ impl CronExpr {
     /// Next fire time strictly after `after`, evaluated in the schedule's
     /// IANA timezone (CRON-6, cron README §7): the wall-clock fields
     /// (minute/hour/dom/month/dow) match against LOCAL time in `tz`; the
-    /// returned instant is UTC. DST is resolved by chrono-tz — an ambiguous
+    /// returned instant is UTC. DST is resolved by chrono-tz - an ambiguous
     /// local time maps to the earlier (fold 0) instant. `tz` `"UTC"` or an
     /// unparseable name behaves exactly like [`Self::next_after`].
     ///
     /// Implementation: convert `after` into the target zone, run the same
     /// minute-scan over local wall times, and convert each candidate back
-    /// to UTC at the end — a single conversion keeps the scan cheap.
+    /// to UTC at the end - a single conversion keeps the scan cheap.
     pub fn next_after_in_tz(&self, after: DateTime<Utc>, tz: &str) -> Option<DateTime<Utc>> {
         let tz_parsed: chrono_tz::Tz = tz.parse().ok()?;
         let local_after = after.with_timezone(&tz_parsed);
@@ -323,7 +323,7 @@ fn next_allowed_month_local<Tz: TimeZone>(t: &DateTime<Tz>, month: &Field) -> Op
     None
 }
 
-/// First instant of the next occurrence of `month` after `t` — year-wraps
+/// First instant of the next occurrence of `month` after `t` - year-wraps
 /// when the target month is earlier in the calendar than the current one
 /// (e.g. July → February lands on next year's Feb 1).
 fn first_of_next_month(t: DateTime<Utc>, month: u32) -> Option<DateTime<Utc>> {
@@ -335,7 +335,7 @@ fn first_of_next_month(t: DateTime<Utc>, month: u32) -> Option<DateTime<Utc>> {
     Utc.with_ymd_and_hms(year, month, 1, 0, 0, 0).single()
 }
 
-/// Validate an expression for the create handler — returns the normalized
+/// Validate an expression for the create handler - returns the normalized
 /// parse error message on failure.
 /// Validate it.
 pub fn validate(expr: &str) -> Result<(), CronExprError> {
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn month_skips_fast_path() {
-        // February only — must land on Feb 1 even when starting in July.
+        // February only - must land on Feb 1 even when starting in July.
         let e = parse("0 0 1 2 *");
         assert_eq!(
             e.next_after(utc("2026-07-15T00:00:00Z")),

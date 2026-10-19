@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:Cron
 // SPDX-License-Identifier: Apache-2.0
 
-//! Sentin8:Cron Admin UI handlers — RFW definitions.
+//! Sentin8:Cron Admin UI handlers - RFW definitions.
 //! Served from `GET /v1/admin/ui/{page}`, rendered by Sentin8:Dash at runtime.
 
 use crate::handlers::AppState;
@@ -158,7 +158,7 @@ pub async fn get_admin_ui(
                             "The proxy-back target: `baseUrl` (the owning \
                             service's origin) + optional `internalPath`. \
                             The create-time validation rejects a config without\
-                             a non-empty `baseUrl` — the ticker can never \
+                             a non-empty `baseUrl` - the ticker can never \
                              execute a blank/malformed config (cron DESIGN §3, \
                              WARN-22).".into(),
                         ),
@@ -171,7 +171,7 @@ pub async fn get_admin_ui(
                 method: FormMethod::Post,
             }))
             .build(),
-        // ── Policy Studio — shared page
+        // ── Policy Studio - shared page
         // constructors; the guard guarantees `Some` ( dispatch).
         p if sentin8::rfw::policy_page("sentin8:cron", p).is_some() => {
             sentin8::rfw::policy_page("sentin8:cron", p)
@@ -190,8 +190,8 @@ pub async fn get_admin_ui(
     ))
 }
 
-/// `GET /v1/admin/{resource}` — returns a JSON array of admin data rows.
-/// SECURITY: `target_env_id` is REQUIRED — no fallback to the token's env_id.
+/// `GET /v1/admin/{resource}` - returns a JSON array of admin data rows.
+/// SECURITY: `target_env_id` is REQUIRED - no fallback to the token's env_id.
 /// The caller must explicitly specify which env they are administering.
 /// RLS context is set before querying to enforce tenant isolation.
 /// Fetch admin data.
@@ -224,7 +224,7 @@ pub async fn get_admin_data(
         "sentin8:sys:org:admin",
         "sentin8:sys:env:admin",
     ])?;
-    // SECURITY: target_env_id is required — no fallback.
+    // SECURITY: target_env_id is required - no fallback.
     // Without it, a tenant user could read system env data via their token env_id.
     let env_id = q
         .target_env_id
@@ -233,10 +233,10 @@ pub async fn get_admin_data(
         .ok_or_else(|| {
             (
                 axum::http::StatusCode::BAD_REQUEST,
-                "missing target_env_id — must specify the env to administer".to_string(),
+                "missing target_env_id - must specify the env to administer".to_string(),
             )
         })?;
-    // Set RLS context on the SAME connection used for data queries — inside
+    // Set RLS context on the SAME connection used for data queries - inside
     // an explicit transaction (cron DESIGN §7): set_config(…, true) is
     // transaction-local, so on a pool-acquired autocommit connection the
     // context evaporates before the data query and FORCE-RLS hides every row
@@ -251,7 +251,7 @@ pub async fn get_admin_data(
         .execute(&mut *conn)
         .await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    // env_id is the sole tenant key — RLS enforces isolation.
+    // env_id is the sole tenant key - RLS enforces isolation.
     let rows: Vec<serde_json::Value> = match resource.as_str() {
         "jobs" => sqlx::query("SELECT id::text, schedule_id::text, status, error_message FROM jobs WHERE env_id = $1 ORDER BY created_at DESC LIMIT 100")
             .bind(env_id)

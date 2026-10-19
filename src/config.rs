@@ -10,7 +10,7 @@ use std::env;
 use sentin8::auth::client::{Client as AuthClient, ClientOptions};
 
 /// Proxy-back transport for schedule callbacks (, auth DESIGN
-/// §4.3f): the `sentin8:cron` CERTIFICATE is the identity — presented
+/// §4.3f): the `sentin8:cron` CERTIFICATE is the identity - presented
 /// in the TLS handshake on every proxy-back call; the target service's
 /// TLS layer authenticates it. No bearer token exists on this path.
 #[derive(Clone)]
@@ -35,7 +35,7 @@ impl M2mSettings {
     }
 
     /// Install the cert-presenting transport (cron DESIGN §4.4): called
-    /// once by `build_state` after `ensure_workload_certificate` — after
+    /// once by `build_state` after `ensure_workload_certificate` - after
     /// this, `client()` returns the mTLS transport presenting the
     /// `sentin8:cron` workload identity.
     pub fn set_inner(&mut self, client: sentin8::middleware::http_client::Sentin8HttpClient) {
@@ -46,7 +46,7 @@ impl M2mSettings {
     ///
     /// # Errors
     /// [`String`] when no transport is installed (the workload
-    /// certificate was never ensured — a provisioning state).
+    /// certificate was never ensured - a provisioning state).
     pub fn client(&self) -> Result<sentin8::middleware::http_client::Sentin8HttpClient, String> {
         self.inner.as_ref().map(|c| (**c).clone()).ok_or_else(|| {
             "no proxy-back transport configured (workload certificate missing)".into()
@@ -71,7 +71,7 @@ pub struct CronConfig {
     /// Job timeout in seconds (default 30).
     /// The job timeout secs.
     pub job_timeout_secs: u64,
-    /// Shared Auth client — constructed once so the discovery and JWKS
+    /// Shared Auth client - constructed once so the discovery and JWKS
     /// caches are reused across every request (5-minute TTL each).
     /// Cloning is cheap (the caches live behind an `Arc`).
     /// The auth client.

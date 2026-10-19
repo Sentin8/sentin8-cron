@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:Cron
 // SPDX-License-Identifier: Apache-2.0
 
-//! Cron ticker loop — query due schedules (cross-tenant, SECURITY DEFINER),
+//! Cron ticker loop - query due schedules (cross-tenant, SECURITY DEFINER),
 //! acquire connection-scoped advisory locks, execute via proxy-back with an
 //! M2M token, track job status with exponential backoff, move failures to
 //! the DLQ, drain retryable pending jobs, and emit lifecycle events
@@ -20,7 +20,7 @@ use uuid::Uuid;
 
 use crate::config::CronConfig;
 
-/// Ticker heartbeat — `Some` once the first tick has run, refreshed each
+/// Ticker heartbeat - `Some` once the first tick has run, refreshed each
 /// tick. Read by the health endpoint.
 pub static LAST_TICK: std::sync::Mutex<Option<DateTime<Utc>>> = std::sync::Mutex::new(None);
 
@@ -52,13 +52,13 @@ pub fn spawn(config: Arc<CronConfig>, pool: sqlx::PgPool) {
     });
 }
 
-/// One tick — find due schedules, lock each, execute, record job; then
+/// One tick - find due schedules, lock each, execute, record job; then
 /// drain retryable pending jobs.
 async fn tick(pool: &sqlx::PgPool, config: &Arc<CronConfig>) -> Result<(), sqlx::Error> {
-    // Cross-tenant due read via the SECURITY DEFINER function — the
+    // Cross-tenant due read via the SECURITY DEFINER function - the
     // service role is NOBYPASSRLS and direct-table scans see no rows.
     // DBX : the function lives in cron's OWN schema (`cron.due_schedules`,
-    // services/cron/sql/init.sql — search_path = cron, public would also
+    // services/cron/sql/init.sql - search_path = cron, public would also
     // resolve it unqualified, but the reference stays explicit).
     let due = sqlx::query(
         r#"SELECT id, domain, schedule_type, cron_expression, target_config,
@@ -100,9 +100,9 @@ async fn tick(pool: &sqlx::PgPool, config: &Arc<CronConfig>) -> Result<(), sqlx:
         }
     }
 
-    // Step 3 — drain retryable jobs (schedule-driven + manually retried).
+    // Step 3 - drain retryable jobs (schedule-driven + manually retried).
     // Per-job attempt tracking lives on the SCHEDULE (`schedules
-    // .retry_count`, design ) — the jobs table is an execution record
+    // .retry_count`, design ) - the jobs table is an execution record
     // and has no retry column. The drain reads the schedule's current
     // retry_count/max_retries; process_pending_job re-executes the job and
     // `run_locked` updates the schedule's counter on the outcome.
@@ -167,7 +167,7 @@ async fn process_due(
     kind: &str,
     timezone: &str,
 ) -> Result<(), String> {
-    // One dedicated connection for the whole lock window — session
+    // One dedicated connection for the whole lock window - session
     // advisory locks are per-connection.
     let mut conn = pool.acquire().await.map_err(|e| e.to_string())?;
     let lock_key = uuid_to_i64(id);
@@ -237,7 +237,7 @@ async fn process_pending_job(
     if !got_lock {
         return Ok(());
     }
-    // Claim the job — only if still pending.
+    // Claim the job - only if still pending.
     let claimed = sqlx::query(
         "UPDATE cron.jobs SET status = 'running', started_at = now() WHERE id = $1 AND status = 'pending'",
     )
@@ -281,7 +281,7 @@ async fn process_pending_job(
 /// Next fire time strictly after now, evaluated in the schedule's IANA
 /// timezone (CRON-6, cron README §7). The wall-clock fields match local
 /// time in `timezone`; the result is a UTC instant. Falls back to one
-/// hour ahead when the expression is unparseable — that case is rejected
+/// hour ahead when the expression is unparseable - that case is rejected
 /// at create time; the fallback only guards legacy rows. An unparseable
 /// timezone falls back to UTC evaluation.
 fn next_fire_in_tz(cron_expression: &str, timezone: &str) -> DateTime<Utc> {
@@ -314,7 +314,7 @@ async fn run_locked(
     // Job record + tenant context on the same connection (RLS WITH CHECK).
     //
     // Transaction-locality (cron DESIGN §5): both statements run in ONE
-    // transaction on the lock connection. Each was previously autocommit —
+    // transaction on the lock connection. Each was previously autocommit -
     // `set_config(..., true)` is transaction-local, so the context
     // evaporated at the context-set statement's own commit and every
     // INSERT tripped the jobs RLS policy (`new row violates row-level
@@ -324,12 +324,12 @@ async fn run_locked(
         None => {
             // Open-job guard (cron DESIGN §5): a schedule with a
             // pending/running job already has its next attempt scheduled
-            // — the retry drain owns that execution. Claiming the same
+            // - the retry drain owns that execution. Claiming the same
             // schedule now would collide on
             // `sentin8_cron_jobs_open_per_schedule` and only produce a
             // per-tick warn loop while the retry backoff runs its course.
             // The due read skips the schedule this tick. The check runs in
-            // a tenant-context transaction (jobs is FORCE-RLS'd — a bare
+            // a tenant-context transaction (jobs is FORCE-RLS'd - a bare
             // pool read returns no rows; §4.3d same-connection locality).
             let mut gtx = <sqlx::PgConnection as sqlx::Connection>::begin(&mut *conn)
                 .await
@@ -348,7 +348,7 @@ async fn run_locked(
             .map_err(|e| e.to_string())?;
             gtx.commit().await.map_err(|e| e.to_string())?;
             if open.is_some() {
-                // Skip WITHOUT unlocking — the caller (process_due /
+                // Skip WITHOUT unlocking - the caller (process_due /
                 // process_pending_job) owns the unlock on this connection;
                 // unlocking here double-releases (sqlx logs the
                 // "not owned" notice and the caller's own check then
@@ -437,7 +437,7 @@ async fn run_locked(
             .await
             .map_err(|e| e.to_string())?;
             // One-shot schedules (cron README §7): the fire IS the
-            // completion — mark `completed` so the due query never returns
+            // completion - mark `completed` so the due query never returns
             // the row again (recurring rows keep the expression-driven
             // next_run_at reschedule).
             if kind == "once" {
@@ -485,7 +485,7 @@ async fn run_locked(
                 .execute(&mut *tx)
                 .await
                 .map_err(|e2| e2.to_string())?;
-                // Next attempt per the cron expression — DLQ does not stop the schedule.
+                // Next attempt per the cron expression - DLQ does not stop the schedule.
                 sqlx::query(
                     r#"UPDATE cron.schedules SET retry_count = 0, next_run_at = $2 WHERE id = $1"#,
                 )
@@ -539,7 +539,7 @@ async fn run_locked(
     }
 }
 
-/// Proxy-back execution — call the target service's internal API with a
+/// Proxy-back execution - call the target service's internal API with a
 /// fresh M2M token and a self-contained envelope.
 ///
 /// `pub` (not `pub(crate)`): the test binary includes this module via
@@ -567,7 +567,7 @@ pub async fn execute_proxy_back(
         return Err("missing baseUrl in target_config".into());
     }
     // the cert-presenting transport (the `sentin8:cron`
-    // workload identity rides the TLS handshake — no bearer).
+    // workload identity rides the TLS handshake - no bearer).
     let client = m2m
         .client()
         .map_err(|e| format!("proxy-back transport: {e}"))?;
@@ -594,7 +594,7 @@ pub async fn execute_proxy_back(
     .map_err(|e| format!("proxy-back HTTP error: {e}"))?;
     if !resp.status().is_success() {
         // Failure-path response capture (cron README §7): retain the first
-        // 4KiB of the non-2xx body for debugging — bounded storage.
+        // 4KiB of the non-2xx body for debugging - bounded storage.
         let status = resp.status();
         let body = resp.text().await.unwrap_or_default();
         let snippet: String = body.chars().take(4096).collect();
@@ -607,7 +607,7 @@ pub async fn execute_proxy_back(
 
 /// Derive a stable i64 key from a UUID for advisory locks.
 ///
-/// `pub` for the same reason as `execute_proxy_back` — test-binary access.
+/// `pub` for the same reason as `execute_proxy_back` - test-binary access.
 pub fn uuid_to_i64(id: Uuid) -> i64 {
     let bytes = id.as_bytes();
     let mut h: i64 = 0;

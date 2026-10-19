@@ -1,4 +1,4 @@
-# sentin8-cron — one repo, one cargo workspace: the service binary + its
+# sentin8-cron - one repo, one cargo workspace: the service binary + its
 # SDK mini-facade (SDD 3.1). The facade re-exports the client/contracts
 # crates; consumers pin this repo git tag {svc}-sdk-vX.Y.Z.
 
@@ -18,7 +18,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Sentin8/sentin8-cron"
 rust-version = "1.85"
-description = "Sentin8 Sentin8:Cron — standalone distributed scheduler."
+description = "Sentin8 Sentin8:Cron - standalone distributed scheduler."
 
 [[bin]]
 name = "sentin8-cron"
@@ -64,7 +64,7 @@ rust-version = "1.85"
 repository = "https://github.com/Sentin8/sentin8-cron"
 
 [workspace.dependencies]
-# Versions mirror the SDK workspace (sentin8-sdk/Cargo.toml) — kept in
+# Versions mirror the SDK workspace (sentin8-sdk/Cargo.toml) - kept in
 # sync by the owner repo's bumps.
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots-no-provider"], default-features = false }
@@ -77,7 +77,7 @@ uuid = { version = "1", features = ["v4", "v7", "serde"] }
 utoipa = { version = "5", features = ["chrono", "uuid"] }
 async-trait = "0.1"
 
-# Shared-plane leaf crates resolve through the SDK git pin — a git-pinned
+# Shared-plane leaf crates resolve through the SDK git pin - a git-pinned
 # workspace exports every member crate under the same source (SDD §3.1;
 # the facade re-export alone is not enough for moved crates that link
 # leaf crates directly).

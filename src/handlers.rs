@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:Cron
 // SPDX-License-Identifier: Apache-2.0
 
-//! Cron HTTP handlers — schedule, job, and DLQ management API.
+//! Cron HTTP handlers - schedule, job, and DLQ management API.
 //!
 //! Stories.
 
@@ -29,11 +29,11 @@ pub struct AppState {
     pub config: Arc<CronConfig>,
     /// The pool.
     pub pool: sqlx::PgPool,
-    /// Shield engine ( — ): policy is an ADDITIONAL
+    /// Shield engine ( - ): policy is an ADDITIONAL
     /// gate after scope checks; can only deny.
     /// The policy.
     pub policy: Arc<crate::policy::Engine>,
-    /// Shared Sentin8:Policy admin surface ( — one
+    /// Shared Sentin8:Policy admin surface ( - one
     /// implementation for every service; mounted in server::routes).
     /// The admin.
     pub admin: sentin8::shield::admin::SharedAdminState,
@@ -44,7 +44,7 @@ fn err_db(e: sqlx::Error) -> (StatusCode, String) {
 }
 
 /// Set the RLS tenant context inside a transaction. `sentin8_set_tenant_context`
-/// uses `set_config(..., true)` — transaction-local, so this MUST run inside
+/// uses `set_config(..., true)` - transaction-local, so this MUST run inside
 /// the same transaction as the domain statements (
 /// ).
 async fn set_rls_tx(
@@ -59,7 +59,7 @@ async fn set_rls_tx(
     Ok(())
 }
 
-/// Begin a transaction with the tenant context set — the RLS-scoped unit
+/// Begin a transaction with the tenant context set - the RLS-scoped unit
 /// for every handler (auth SEC- pattern).
 async fn begin_tenant_tx(
     pool: &sqlx::PgPool,
@@ -75,7 +75,7 @@ async fn begin_tenant_tx(
 /// Query params accepted by all env-scoped endpoints. `target_env_id` is
 /// forwarded by the BFF proxy to identify the tenant env when the caller's
 /// token carries the system env (platform operators managing a tenant env).
-/// REQUIRED — no silent fallback to the caller's own env.
+/// REQUIRED - no silent fallback to the caller's own env.
 #[derive(Debug, Deserialize, ToSchema)]
 /// The targetenvquery type.
 pub struct TargetEnvQuery {
@@ -86,7 +86,7 @@ pub struct TargetEnvQuery {
 
 /// Resolve the effective env_id: prefer `target_env_id` from query params
 /// (BFF proxy), fall back to the token's env_id (the M2M service
-/// self-registration path — schedule create rides the service's own
+/// self-registration path - schedule create rides the service's own
 /// token, whose env is the system env).
 fn resolve_env_id(a: &auth::AuthContext, q: &TargetEnvQuery) -> Result<Uuid, (StatusCode, String)> {
     if let Some(id) = q
@@ -133,7 +133,7 @@ fn default_max_retries() -> i32 {
 
 /// Normalize a client-supplied `target_config` into a JSON OBJECT (cron
 /// DESIGN §3): blank strings, JSON-null and missing values become `{}`;
-/// a JSON-encoded string (`"{\"baseUrl\":...}"`) is parsed through — the
+/// a JSON-encoded string (`"{\"baseUrl\":...}"`) is parsed through - the
 /// RFW admin form sends TEXT, and without this unwrap the empty-string
 /// case persisted a bare string that only surfaced as a per-tick ticker
 /// failure. Any other non-object shape is a 400.
@@ -153,7 +153,7 @@ fn normalize_target_config(v: serde_json::Value) -> Result<serde_json::Value, St
 }
 
 /// Flatten a one-level JSON-encoded string field inside an object
-/// (`{"target_config": "{...}"}` style payloads) — not needed today; the
+/// (`{"target_config": "{...}"}` style payloads) - not needed today; the
 /// identity passthrough keeps the shape stable.
 fn normalize_target_config_nested(v: serde_json::Value) -> Result<serde_json::Value, String> {
     Ok(v)
@@ -216,7 +216,7 @@ pub async fn create_schedule(
     let once = req.kind.as_deref() == Some("once");
     let expr = crate::cron_expr::CronExpr::parse(&req.cron_expression)
         .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
-    // CRON-6: validate the IANA zone at create time — a bad zone is a 400,
+    // CRON-6: validate the IANA zone at create time - a bad zone is a 400,
     // not a runtime surprise on every tick.
     let timezone = req.timezone.clone().unwrap_or_else(|| "UTC".to_string());
     if timezone.parse::<chrono_tz::Tz>().is_err() {
@@ -243,11 +243,11 @@ pub async fn create_schedule(
             })?,
     };
     // Target validation at CREATE time (cron DESIGN §3; WARN-22): a config
-    // the ticker can never execute must be rejected HERE — the previous
+    // the ticker can never execute must be rejected HERE - the previous
     // behavior accepted a blank/malformed config and every tick then
     // failed ("missing baseUrl"), retried into backoff, and re-fired due
     // claims against the same schedule (advisory-lock + open-job unique
-    // contention) — a per-tick warn loop for a configuration typo.
+    // contention) - a per-tick warn loop for a configuration typo.
     let target_config = normalize_target_config(req.target_config.clone())
         .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
     if target_config
@@ -382,7 +382,7 @@ pub async fn list_schedules(
     Ok(Json(rows.into_iter().map(row_to_schedule).collect()))
 }
 
-/// `GET /v1/schedules/{id}` — schedule detail.
+/// `GET /v1/schedules/{id}` - schedule detail.
 #[utoipa::path(
     get,
     operation_id = "schedule.get",
@@ -419,7 +419,7 @@ pub async fn get_schedule(
     Ok(Json(row_to_schedule(row)))
 }
 
-/// `PATCH /v1/schedules/{id}` — pause/resume via status (cron README §7).
+/// `PATCH /v1/schedules/{id}` - pause/resume via status (cron README §7).
 /// `{status: "paused" | "active"}`; resume recomputes `next_run_at` from
 /// now so a paused schedule does not fire for misses during the pause.
 #[derive(Debug, Deserialize, ToSchema)]
@@ -554,7 +554,7 @@ async fn pause_schedule_inner(
 }
 
 /// Shared resume path for the POST alias and the PATCH status. Recomputes
-/// `next_run_at` from now — a paused schedule does not fire for misses
+/// `next_run_at` from now - a paused schedule does not fire for misses
 /// during the pause.
 async fn resume_schedule_inner(
     state: &AppState,
@@ -677,7 +677,7 @@ pub async fn resume_schedule(
     let a = auth::verify_token(&state.config, &headers).await?;
     let env_id = resolve_env_id(&a, &q)?;
     let mut tx = begin_tenant_tx(&state.pool, env_id).await?;
-    // Recompute the next fire time from now — a paused schedule does not
+    // Recompute the next fire time from now - a paused schedule does not
     // fire for misses during the pause. CRON-6: evaluated in the
     // schedule's timezone.
     let row = sqlx::query(
@@ -818,7 +818,7 @@ pub async fn list_jobs(
     ))
 }
 
-/// `GET /v1/jobs/{id}` — job detail.
+/// `GET /v1/jobs/{id}` - job detail.
 #[utoipa::path(
     get,
     operation_id = "job.get",
@@ -862,7 +862,7 @@ pub async fn get_job(
     }))
 }
 
-/// `POST /v1/jobs/{id}/retry` — reset a failed job to `pending` with
+/// `POST /v1/jobs/{id}/retry` - reset a failed job to `pending` with
 /// `next_attempt_at = now`; the ticker drains it on the next tick
 /// .
 #[utoipa::path(
@@ -991,7 +991,7 @@ pub async fn list_dlq(
     ))
 }
 
-/// `GET /v1/dlq/{id}` — DLQ item detail.
+/// `GET /v1/dlq/{id}` - DLQ item detail.
 #[utoipa::path(
     get,
     operation_id = "dlq.get",
@@ -1034,7 +1034,7 @@ pub async fn get_dlq(
     }))
 }
 
-/// `POST /v1/dlq/{id}/republish` — republish a DLQ item as a new pending
+/// `POST /v1/dlq/{id}/republish` - republish a DLQ item as a new pending
 /// job and delete the DLQ row.
 #[utoipa::path(
     post,
@@ -1098,7 +1098,7 @@ pub async fn republish_dlq(
 
 // ── Health ──────────────────────────────────────────────────────────────
 
-/// `GET /v1/health` — status, ticker heartbeat, active schedule count.
+/// `GET /v1/health` - status, ticker heartbeat, active schedule count.
 #[utoipa::path(
     get,
     path = "/v1/health",
@@ -1143,7 +1143,7 @@ pub async fn health(State(state): State<AppState>) -> Json<serde_json::Value> {
 
 /// Append an event to the shared `inbox` table **inside the domain
 /// transaction** (inbox-first, design ). Failure aborts the transaction
-/// — the event and the domain change commit together.
+/// - the event and the domain change commit together.
 async fn emit_event_tx(
     tx: &mut sqlx::Transaction<'static, sqlx::Postgres>,
     env_id: Uuid,
@@ -1153,7 +1153,7 @@ async fn emit_event_tx(
     sentin8::bus::outbox::insert_outbox_row(&mut **tx, env_id, "cron", event_type, payload)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, event_type = %event_type, "cron: inbox event insert failed — rolling back domain change");
+            tracing::error!(error = %e, event_type = %event_type, "cron: inbox event insert failed - rolling back domain change");
             (StatusCode::INTERNAL_SERVER_ERROR, format!("event emit failed: {e}"))
         })?;
     Ok(())

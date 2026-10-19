@@ -123,7 +123,7 @@ impl CronClient {
         format!("{}{}", self.base_url, path)
     }
 
-    /// `POST /v1/schedules` — register a new schedule.
+    /// `POST /v1/schedules` - register a new schedule.
     pub async fn create_schedule(
         &self,
         req: &CreateScheduleRequest,
@@ -144,7 +144,7 @@ impl CronClient {
             .map_err(|e| CronError::Decode(e.to_string()))
     }
 
-    /// `GET /v1/schedules` — list schedules.
+    /// `GET /v1/schedules` - list schedules.
     pub async fn list_schedules(&self) -> Result<Vec<ScheduleResponse>, CronError> {
         let resp = self
             .http
@@ -161,7 +161,7 @@ impl CronClient {
             .map_err(|e| CronError::Decode(e.to_string()))
     }
 
-    /// `PATCH /v1/schedules/{id}` — pause/resume via status
+    /// `PATCH /v1/schedules/{id}` - pause/resume via status
     /// (`{"status": "paused" | "active"}`; resume recomputes
     /// `next_run_at` from now server-side).
     pub async fn update_schedule_status(&self, id: Uuid, status: &str) -> Result<(), CronError> {
@@ -179,7 +179,7 @@ impl CronClient {
         Ok(())
     }
 
-    /// `DELETE /v1/schedules/{id}` — delete a schedule.
+    /// `DELETE /v1/schedules/{id}` - delete a schedule.
     pub async fn delete_schedule(&self, id: Uuid) -> Result<(), CronError> {
         let resp = self
             .http
