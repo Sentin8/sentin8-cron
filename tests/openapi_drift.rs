@@ -11,15 +11,15 @@
 //! stale spec pairs. A route without an annotation fails CI before the site
 //! API pages can trail.
 
-use sentin8::shell::drift_guard::{
-    assert_openapi_covers_router, served_routes, spec_pairs,
-};
+use sentin8::shell::drift_guard::{assert_openapi_covers_router, served_routes, spec_pairs};
 
 #[tokio::test]
 async fn openapi_spec_covers_every_served_route() {
     let router: axum::Router<sentin8_cron_server::handlers::AppState> =
         sentin8_cron_server::server::routes(axum::Router::new());
     let served = served_routes(&router);
-    let pairs = spec_pairs(&<sentin8_cron_server::openapi::CronOpenApi as sentin8::openapi::OpenApi>::openapi());
+    let pairs = spec_pairs(
+        &<sentin8_cron_server::openapi::CronOpenApi as sentin8::openapi::OpenApi>::openapi(),
+    );
     assert_openapi_covers_router(&served, &pairs, &[]);
 }

@@ -101,4 +101,5 @@ pub mod rfw_aliases {
         (name = "policy", description = "Shield policy administration (shared surface)"),
         (name = "cron", description = "Sentin8:Cron admin API - schedules, jobs, DLQ"),
     ),
-)]pub struct CronOpenApi;
+)]
+pub struct CronOpenApi;
