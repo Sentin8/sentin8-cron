@@ -157,4 +157,4 @@ failed emission aborts the domain write).
 
 ---
 
-**Design attribution:** sentin8:cron and its underlying concepts were designed by Hamid Jahanzad <Hamid@Jahanzad.com>.
+**Architecture & Design:** sentin8:cron and its underlying concepts were designed by [Hamid Jahanzad](https://www.linkedin.com/in/hamidjahanzad/).
