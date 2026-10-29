@@ -29,7 +29,7 @@ pub struct AppState {
     pub config: Arc<CronConfig>,
     /// The pool.
     pub pool: sqlx::PgPool,
-    /// Shield engine ( - ): policy is an ADDITIONAL
+    /// Shield engine : policy is an ADDITIONAL
     /// gate after scope checks; can only deny.
     /// The policy.
     pub policy: Arc<crate::policy::Engine>,
@@ -242,7 +242,7 @@ pub async fn create_schedule(
                 )
             })?,
     };
-    // Target validation at CREATE time (cron DESIGN §3; WARN-22): a config
+    // Target validation at CREATE time (cron DESIGN §3;): a config
     // the ticker can never execute must be rejected HERE - the previous
     // behavior accepted a blank/malformed config and every tick then
     // failed ("missing baseUrl"), retried into backoff, and re-fired due

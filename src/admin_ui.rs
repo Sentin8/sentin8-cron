@@ -159,8 +159,8 @@ pub async fn get_admin_ui(
                             service's origin) + optional `internalPath`. \
                             The create-time validation rejects a config without\
                              a non-empty `baseUrl` - the ticker can never \
-                             execute a blank/malformed config (cron DESIGN §3, \
-                             WARN-22).".into(),
+                             execute a blank/malformed config (cron DESIGN §3)."
+                                .into(),
                         ),
                         visible_if: None,
                     },
