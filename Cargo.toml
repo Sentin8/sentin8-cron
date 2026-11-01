@@ -32,7 +32,7 @@ path = "src/lib.rs"
 # THE SDK pin (RS 2.3) - the only cross-repo dependency. It carries the
 # entire shared library workspace (core/identity/tls/bus/shield/shell +
 # every cron-client/contracts SDK crate) behind the `sentin8` facade.
-sentin8 = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
+sentin8 = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
 sentin8-cron-contracts = { path = "sdk/crates/cron-contracts" }
 
 axum = { version = "0.8", features = ["macros"] }
@@ -47,7 +47,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls-ring", "postgres", "uuid", "chrono", "json", "macros"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-native-tls", "postgres", "uuid", "chrono", "json", "macros"] }
 dotenvy = "0.15"
 uuid = { version = "1", features = ["v4", "v5", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
@@ -81,11 +81,11 @@ async-trait = "0.1"
 # workspace exports every member crate under the same source (SDD §3.1;
 # the facade re-export alone is not enough for moved crates that link
 # leaf crates directly).
-sdk_git = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
-sentin8 = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
-sentin8-middleware = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
-sentin8-m2m = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
-sentin8-tls = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.21" }
+sdk_git = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
+sentin8 = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
+sentin8-middleware = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
+sentin8-m2m = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
+sentin8-tls = { git = "https://github.com/Sentin8/sentin8-sdk", tag = "sdk-v0.6.22" }
 sentin8-cron-client = { path = "sdk/crates/cron-client" }
 sentin8-cron-contracts = { path = "sdk/crates/cron-contracts" }
 sentin8-cron-sdk = { path = "sdk/facade" }
