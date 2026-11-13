@@ -19,6 +19,11 @@ jobs:
     uses: Sentin8/sentin8-ci/.github/workflows/sdk-release.yml@ci-v2
     with:
       sdk-repo: 'Sentin8/sentin8-cron'
+    # The GitHub Release step inside the lane needs contents:write on
+    # THIS repo - reusable workflows cannot elevate their own token, the
+    # caller grants it (GitHub startup_fails the call otherwise).
+    permissions:
+      contents: write
     secrets:
       SENTIN8_CI_APP_ID: ${{ secrets.SENTIN8_CI_APP_ID }}
       SENTIN8_CI_APP_PRIVATE_KEY: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
