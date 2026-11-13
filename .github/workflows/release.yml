@@ -8,14 +8,15 @@
 
 name: release
 # SDK tag-push release lane: builds the tag, fans out the pin-bump
-# cascade to consumers (gated behind the cascade GitHub App secrets).
+# cascade to consumers (gated behind the cascade GitHub App secrets),
+# creates the GitHub Release (CICD design §2.6).
 on:
   push:
     tags: ['cron-sdk-v*']
 
 jobs:
   release:
-    uses: Sentin8/sentin8-ci/.github/workflows/sdk-release.yml@ci-v1
+    uses: Sentin8/sentin8-ci/.github/workflows/sdk-release.yml@ci-v2
     with:
       sdk-repo: 'Sentin8/sentin8-cron'
     secrets:
