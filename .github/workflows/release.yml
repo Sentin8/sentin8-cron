@@ -16,7 +16,7 @@ on:
 
 jobs:
   release:
-    uses: Sentin8/sentin8-ci/.github/workflows/sdk-release.yml@ci-v2
+    uses: Sentin8/sentin8-ci/.github/workflows/sdk-release.yml@ci-v3
     with:
       sdk-repo: 'Sentin8/sentin8-cron'
     # The GitHub Release step inside the lane needs contents:write on
